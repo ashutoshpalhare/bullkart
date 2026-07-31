@@ -46,7 +46,14 @@ export async function fetchProducts(filters: ProductFilters, page = 0) {
   const limit = filters.limit ?? PAGE_SIZE;
   let query = supabase.from("products").select(PRODUCT_SELECT, { count: "exact" }).eq("is_active", true);
 
-  if (filters.categorySlug) query = query.eq("categories.slug", filters.categorySlug);
+  if (filters.categorySlug) {
+    const { data: cat } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", filters.categorySlug)
+      .maybeSingle();
+    query = query.eq("category_id", cat?.id ?? "00000000-0000-0000-0000-000000000000");
+  }
   if (filters.search) query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
   if (filters.minPrice != null) query = query.gte("price", filters.minPrice);
   if (filters.maxPrice != null) query = query.lte("price", filters.maxPrice);
