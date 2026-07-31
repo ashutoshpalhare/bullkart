@@ -42,9 +42,9 @@ function CheckoutPage() {
                 ["City", "city", "Bengaluru"],
                 ["Pincode", "pincode", "560001"],
               ].map(([label, id, ph]) => (
-                <div key={id} className="grid gap-2">
-                  <Label htmlFor={id}>{label}</Label>
-                  <Input id={id} name={id} placeholder={ph} className="rounded-xl" />
+                <div key={id as string} className="grid gap-2">
+                  <Label htmlFor={id as string}>{label}</Label>
+                  <Input id={id as string} name={id as string} placeholder={ph as string} className="rounded-xl" />
                 </div>
               ))}
             </div>
@@ -58,9 +58,9 @@ function CheckoutPage() {
                 ["cod", "Cash on delivery"],
                 ["wallet", "BullKart wallet (coming soon)"],
               ].map(([v, label]) => (
-                <div key={v} className="flex items-center gap-3 rounded-xl border border-border p-3">
-                  <RadioGroupItem value={v} id={v} />
-                  <Label htmlFor={v} className="font-normal">
+                <div key={v as string} className="flex items-center gap-3 rounded-xl border border-border p-3">
+                  <RadioGroupItem value={v as string} id={v as string} />
+                  <Label htmlFor={v as string} className="font-normal">
                     {label}
                   </Label>
                 </div>
