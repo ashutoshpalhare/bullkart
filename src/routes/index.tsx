@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ShieldCheck, Truck, Sprout, BadgeCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Section, SectionHeader } from "@/components/commerce/section";
 import { CategoryCard } from "@/components/commerce/category-card";
 import { ProductCard } from "@/components/commerce/product-card";
-import { categories, products, featuredFarmers } from "@/lib/mock-data";
+import { ProductGridSkeleton } from "@/components/commerce/skeletons";
+import { Skeleton } from "@/components/ui/skeleton";
+import { categoriesQuery, productsQuery, sellersQuery } from "@/features/catalog/queries";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,6 +24,8 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Certified organic products delivered direct from verified farmers and ethical brands.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,
@@ -34,9 +39,17 @@ const trust = [
 ];
 
 function Home() {
+  const categories = useQuery(categoriesQuery());
+  const bestSellers = useQuery(productsQuery({ bestSeller: true, limit: 8 }));
+  const newArrivals = useQuery(productsQuery({ newArrival: true, limit: 4, sort: "newest" }));
+  const featured = useQuery(productsQuery({ featured: true, limit: 4 }));
+  const sellers = useQuery(sellersQuery());
+
+  const heroProducts = featured.data?.rows.slice(0, 4) ?? [];
+  const farmers = (sellers.data ?? []).filter((s) => s.type === "farmer").slice(0, 3);
+
   return (
     <>
-      {/* Hero */}
       <section className="relative overflow-hidden border-b border-border bg-cream">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8 lg:py-24">
           <div>
@@ -78,26 +91,33 @@ function Home() {
 
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
-              {products.slice(0, 4).map((p, i) => (
-                <div
-                  key={p.id}
-                  className={`flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-soft ${
-                    i % 2 === 1 ? "translate-y-6" : ""
-                  }`}
-                >
-                  <span className="grid h-24 place-items-center rounded-2xl bg-cream text-5xl" aria-hidden>
-                    {p.emoji}
-                  </span>
-                  <p className="text-sm font-semibold leading-snug">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.seller.location}</p>
-                </div>
-              ))}
+              {(heroProducts.length ? heroProducts : Array.from({ length: 4 })).map((p, i) =>
+                p ? (
+                  <Link
+                    key={(p as { id: string }).id}
+                    to="/product/$slug"
+                    params={{ slug: (p as { slug: string }).slug }}
+                    className={`flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-1 hover:shadow-lift ${
+                      i % 2 === 1 ? "translate-y-6" : ""
+                    }`}
+                  >
+                    <span className="grid h-24 place-items-center rounded-2xl bg-cream text-5xl" aria-hidden>
+                      {(p as { emoji: string | null }).emoji ?? "🌿"}
+                    </span>
+                    <p className="text-sm font-semibold leading-snug">{(p as { name: string }).name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(p as { seller: { location: string | null } | null }).seller?.location ?? "India"}
+                    </p>
+                  </Link>
+                ) : (
+                  <Skeleton key={i} className={`h-52 rounded-3xl ${i % 2 === 1 ? "translate-y-6" : ""}`} />
+                ),
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Trust bar */}
       <div className="border-b border-border bg-card">
         <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {trust.map(({ icon: Icon, title, copy }) => (
@@ -114,31 +134,45 @@ function Home() {
         </div>
       </div>
 
-      {/* Categories */}
       <Section>
         <SectionHeader
           eyebrow="Shop by category"
-          title="Fourteen aisles of organic"
+          title="Shop by category"
           action={{ label: "View all", to: "/categories" }}
         />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-          {categories.slice(0, 14).map((c) => (
-            <CategoryCard key={c.id} category={c} />
-          ))}
+          {categories.isLoading
+            ? Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)
+            : (categories.data ?? []).slice(0, 14).map((c) => <CategoryCard key={c.id} category={c} />)}
         </div>
       </Section>
 
-      {/* Bestsellers */}
       <Section className="pt-0">
         <SectionHeader eyebrow="Loved this week" title="Bestsellers" action={{ label: "See all", to: "/search" }} />
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {products.slice(0, 8).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        {bestSellers.isLoading ? (
+          <ProductGridSkeleton />
+        ) : (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {(bestSellers.data?.rows ?? []).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
       </Section>
 
-      {/* Farmer stories */}
+      <Section className="pt-0">
+        <SectionHeader eyebrow="Fresh in" title="New arrivals" action={{ label: "See all", to: "/search" }} />
+        {newArrivals.isLoading ? (
+          <ProductGridSkeleton count={4} />
+        ) : (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {(newArrivals.data?.rows ?? []).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
+      </Section>
+
       <section className="bg-leaf/60">
         <Section>
           <SectionHeader
@@ -147,24 +181,20 @@ function Home() {
             action={{ label: "All farmers", to: "/farmers" }}
           />
           <div className="grid gap-4 md:grid-cols-3">
-            {featuredFarmers.map((f) => (
+            {farmers.map((f) => (
               <article key={f.id} className="rounded-3xl border border-border bg-card p-6 shadow-soft">
                 <span className="grid size-14 place-items-center rounded-2xl bg-cream text-3xl" aria-hidden>
-                  {f.emoji}
+                  {f.emoji ?? "🌾"}
                 </span>
                 <h3 className="mt-4 text-lg">{f.name}</h3>
                 <p className="text-sm text-muted-foreground">{f.location}</p>
-                <p className="mt-3 text-sm leading-relaxed">
-                  Growing <span className="font-medium">{f.crop}</span> for {f.years} years, certified organic
-                  and audited every season.
-                </p>
+                <p className="mt-3 text-sm leading-relaxed">{f.story}</p>
               </article>
             ))}
           </div>
         </Section>
       </section>
 
-      {/* Seller CTA */}
       <Section>
         <div className="overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-soft sm:p-12">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
