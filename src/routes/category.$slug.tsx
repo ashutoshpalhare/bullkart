@@ -1,61 +1,101 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Section } from "@/components/commerce/section";
-import { ProductCard } from "@/components/commerce/product-card";
-import type { Product } from "@/types/catalog";
-import { getCategory, productsByCategory } from "@/lib/mock-data";
+import { ProductBrowser } from "@/components/commerce/product-browser";
+import { EmptyState } from "@/components/commerce/states";
+import { categoriesQuery } from "@/features/catalog/queries";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export const Route = createFileRoute("/category/$slug")({
-  loader: ({ params }) => {
-    const category = getCategory(params.slug);
-    if (!category) throw notFound();
-    return { category, products: productsByCategory(params.slug) };
-  },
-  head: ({ loaderData }) => {
-    if (!loaderData) {
-      return { meta: [{ title: "Category not found | BullKart" }, { name: "robots", content: "noindex" }] };
-    }
-    const title = `${loaderData.category.name} — Organic ${loaderData.category.name} | BullKart`;
-    const description = `${loaderData.category.tagline}. Shop certified organic ${loaderData.category.name.toLowerCase()} from verified Indian farmers and ethical brands on BullKart.`;
+  head: ({ params }) => {
+    const pretty = params.slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
     return {
       meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
+        { title: `${pretty} — Organic ${pretty} Online | BullKart` },
+        {
+          name: "description",
+          content: `Shop certified organic ${pretty.toLowerCase()} on BullKart, sourced direct from verified Indian farmers and ethical makers.`,
+        },
+        { property: "og:title", content: `${pretty} — BullKart` },
+        {
+          property: "og:description",
+          content: `Certified organic ${pretty.toLowerCase()} delivered across India.`,
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
       ],
     };
   },
+  loader: ({ params }) => ({ slug: params.slug }),
   component: CategoryPage,
+  errorComponent: ({ error }) => (
+    <Section>
+      <p role="alert" className="text-sm text-destructive">
+        {error.message}
+      </p>
+    </Section>
+  ),
+  notFoundComponent: () => (
+    <Section>
+      <EmptyState
+        title="Category not found"
+        description="This aisle doesn't exist yet."
+        action={{ label: "All categories", to: "/categories" }}
+      />
+    </Section>
+  ),
 });
 
 function CategoryPage() {
-  const { category, products } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const { data: categories, isLoading } = useQuery(categoriesQuery());
+  const category = (categories ?? []).find((c) => c.slug === slug);
+
+  if (!isLoading && categories && !category) throw notFound();
 
   return (
     <Section>
-      <div className="mb-8 flex items-center gap-4">
-        <span className="grid size-16 place-items-center rounded-2xl bg-leaf text-3xl" aria-hidden>
-          {category.emoji}
-        </span>
-        <div>
-          <h1 className="text-3xl">{category.name}</h1>
-          <p className="text-muted-foreground">
-            {category.tagline} · {category.productCount} products
-          </p>
-        </div>
-      </div>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/">Home</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/categories">Categories</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{category?.name ?? slug}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-      {products.length ? (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((p: Product) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+      <header className="mb-8 flex items-center gap-4">
+        <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-leaf text-3xl" aria-hidden>
+          {category?.emoji ?? "🌿"}
+        </span>
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl sm:text-3xl">{category?.name ?? "Category"}</h1>
+          {category?.tagline && <p className="text-sm text-muted-foreground">{category.tagline}</p>}
         </div>
-      ) : (
-        <p className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-          Catalogue for this aisle is being onboarded. Check back shortly.
-        </p>
-      )}
+      </header>
+
+      <ProductBrowser base={{ categorySlug: slug }} showCategoryFilter={false} />
     </Section>
   );
 }
