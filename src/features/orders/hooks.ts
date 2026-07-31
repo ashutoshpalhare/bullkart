@@ -212,11 +212,16 @@ export function useUpdateOrderStatus() {
       cancel_reason?: string;
       return_reason?: string;
     }) => {
-      const patch: Record<string, unknown> = { status };
-      if (cancel_reason) patch['cancel_reason'] = cancel_reason;
+      const patch: {
+        status: "cancelled" | "returned";
+        cancel_reason?: string;
+        return_reason?: string;
+        return_requested_at?: string;
+      } = { status };
+      if (cancel_reason) patch.cancel_reason = cancel_reason;
       if (return_reason) {
-        patch['return_reason'] = return_reason;
-        patch['return_requested_at'] = new Date().toISOString();
+        patch.return_reason = return_reason;
+        patch.return_requested_at = new Date().toISOString();
       }
       const { error } = await supabase.from("orders").update(patch).eq("id", id);
       if (error) throw error;
