@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+
 import { z } from "zod";
 import { CheckCircle2, LogIn, ShoppingCart, Tag } from "lucide-react";
 import { toast } from "sonner";
@@ -14,12 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/commerce/skeletons";
 import { EmptyState } from "@/components/commerce/states";
 import { formatPrice, estimatedDelivery } from "@/lib/format";
-import { EXPRESS_FEE, cartTotals, couponDiscount } from "@/lib/cart";
-import { couponsQuery } from "@/features/catalog/queries";
+import { EXPRESS_FEE, cartTotals } from "@/lib/cart";
 import { useCart } from "@/features/cart/hooks";
+import { useValidateCoupon, type CouponCheck } from "@/features/commerce/hooks";
+import { useRazorpayCheckout } from "@/features/payments/razorpay";
+import { notifyError } from "@/lib/errors";
 import { useAddresses, usePlaceOrder } from "@/features/orders/hooks";
 import { useAuth } from "@/hooks/use-auth";
-import type { CouponRow, ShippingAddress } from "@/types/db";
+import type { ShippingAddress } from "@/types/db";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkout")({
@@ -59,8 +61,9 @@ function CheckoutPage() {
   const { user, loading } = useAuth();
   const cart = useCart();
   const addresses = useAddresses();
-  const coupons = useQuery(couponsQuery());
   const placeOrder = usePlaceOrder();
+  const validateCoupon = useValidateCoupon();
+  const payWithRazorpay = useRazorpayCheckout();
 
   const [step, setStep] = useState<Step>("address");
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -75,15 +78,15 @@ function CheckoutPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deliveryOption, setDeliveryOption] = useState("standard");
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "razorpay">("cod");
   const [couponCode, setCouponCode] = useState("");
-  const [applied, setApplied] = useState<CouponRow | null>(null);
+  const [applied, setApplied] = useState<Extract<CouponCheck, { valid: true }> | null>(null);
   const [placed, setPlaced] = useState<{ order_number: string } | null>(null);
 
   const lines = (cart.data ?? []).filter((l) => l.product);
   const totals = cartTotals(lines);
   const expressFee = deliveryOption === "express" ? EXPRESS_FEE : 0;
-  const discount = couponDiscount(applied, totals.subtotal);
+  const discount = applied?.discount ?? 0;
   const deliveryFee = totals.deliveryFee + expressFee;
   const total = Math.max(0, totals.subtotal - discount + deliveryFee);
 
@@ -179,44 +182,39 @@ function CheckoutPage() {
     return true;
   };
 
+  // The discount is computed and enforced in the database; this is a preview.
   const applyCoupon = () => {
-    const code = couponCode.trim().toUpperCase();
-    const match = (coupons.data ?? []).find((c) => c.code.toUpperCase() === code);
-    if (!match) {
-      toast.error("That coupon code isn't valid.");
-      return;
-    }
-    if (totals.subtotal < Number(match.min_order)) {
-      toast.error(`Add ${formatPrice(Number(match.min_order) - totals.subtotal)} more to use ${match.code}.`);
-      return;
-    }
-    setApplied(match);
-    toast.success(`${match.code} applied`);
+    validateCoupon.mutate(
+      { code: couponCode, subtotal: totals.subtotal },
+      { onSuccess: (result) => setApplied(result.valid ? result : null) },
+    );
   };
 
   const submit = () => {
     placeOrder.mutate(
       {
-        items: lines.map((l) => ({
-          product_id: l.product!.id,
-          product_name: l.product!.name,
-          product_slug: l.product!.slug,
-          emoji: l.product!.emoji,
-          unit: l.product!.unit,
-          price: Number(l.product!.price),
-          quantity: l.quantity,
-        })),
-        subtotal: totals.subtotal,
-        discount,
-        delivery_fee: deliveryFee,
-        total,
         coupon_code: applied?.code ?? null,
         payment_method: paymentMethod,
         delivery_option: deliveryOption,
         shipping_address: shipping,
       },
       {
-        onSuccess: (order) => setPlaced({ order_number: order.order_number }),
+        onSuccess: async (order) => {
+          if (paymentMethod === "razorpay") {
+            try {
+              await payWithRazorpay(order.order_id, {
+                name: shipping.full_name,
+                email: user?.email ?? "",
+                phone: shipping.phone,
+              });
+            } catch (error) {
+              notifyError(error, "Payment didn't go through — retry from My Orders.");
+              void navigate({ to: "/orders" });
+              return;
+            }
+          }
+          setPlaced({ order_number: order.order_number });
+        },
       },
     );
   };
@@ -364,11 +362,16 @@ function CheckoutPage() {
           {step === "payment" && (
             <div>
               <h2 className="text-lg">Payment method</h2>
-              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-4 grid gap-3">
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={(v) => setPaymentMethod(v as "cod" | "razorpay")} className="mt-4 grid gap-3">
                 {[
                   { value: "cod", title: "Cash on delivery", copy: "Pay the delivery partner in cash" },
-                  { value: "upi", title: "UPI", copy: "Simulated payment for this demo" },
-                  { value: "card", title: "Card", copy: "Simulated payment for this demo" },
+                  {
+                    value: "razorpay",
+                    title: "Pay online — UPI, cards, netbanking",
+                    copy: "Secure payment via Razorpay",
+                  },
                 ].map((o) => (
                   <label
                     key={o.value}
@@ -447,7 +450,7 @@ function CheckoutPage() {
             </div>
             {applied && (
               <p className="mt-2 flex items-center gap-1.5 text-xs text-primary">
-                <Tag className="size-3.5" /> {applied.code} — {applied.description}
+                <Tag className="size-3.5" /> {applied.code} — {applied.description ?? "Discount applied"}
               </p>
             )}
 

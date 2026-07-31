@@ -44,7 +44,11 @@ function applySort<T>(q: T, sort: SortKey | undefined): T {
 
 export async function fetchProducts(filters: ProductFilters, page = 0) {
   const limit = filters.limit ?? PAGE_SIZE;
-  let query = supabase.from("products").select(PRODUCT_SELECT, { count: "exact" }).eq("is_active", true);
+  let query = supabase
+    .from("products")
+    .select(PRODUCT_SELECT, { count: "exact" })
+    .eq("is_active", true)
+    .is("deleted_at", null);
 
   if (filters.categorySlug) {
     const { data: cat } = await supabase
@@ -54,7 +58,19 @@ export async function fetchProducts(filters: ProductFilters, page = 0) {
       .maybeSingle();
     query = query.eq("category_id", cat?.id ?? "00000000-0000-0000-0000-000000000000");
   }
-  if (filters.search) query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+  if (filters.search) {
+    // Ranked full-text search over the maintained tsvector column; falls back
+    // to a sanitised prefix match when the phrase has no indexable tokens.
+    const term = filters.search.trim().slice(0, 80);
+    const tokens = term.split(/\s+/).filter(Boolean);
+    if (tokens.length > 0) {
+      query = query.textSearch("search_vector", tokens.map((t) => `${t}:*`).join(" & "));
+    } else {
+      const safe = term.replace(/[%_,()]/g, " ");
+      query = query.ilike("name", `%${safe}%`);
+    }
+  }
+
   if (filters.minPrice != null) query = query.gte("price", filters.minPrice);
   if (filters.maxPrice != null) query = query.lte("price", filters.maxPrice);
   if (filters.minRating) query = query.gte("rating", filters.minRating);
