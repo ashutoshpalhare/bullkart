@@ -22,7 +22,7 @@ export function SectionHeader({
       </div>
       {action && (
         <Link
-          to={action.to}
+          to={action.to as never}
           className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
           {action.label}
