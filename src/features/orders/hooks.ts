@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { notifyError } from "@/lib/errors";
 import type { AddressRow, OrderWithItems, ProfileRow, ShippingAddress } from "@/types/db";
 
 export function useProfile() {
@@ -139,67 +140,80 @@ export function useOrder(id: string) {
 }
 
 export type PlaceOrderInput = {
-  items: {
-    product_id: string;
-    product_name: string;
-    product_slug: string | null;
-    emoji: string | null;
-    unit: string | null;
-    price: number;
-    quantity: number;
-  }[];
-  subtotal: number;
-  discount: number;
-  delivery_fee: number;
-  total: number;
-  coupon_code: string | null;
-  payment_method: string;
+  coupon_code?: string | null;
+  payment_method: "cod" | "razorpay";
   delivery_option: string;
+  use_wallet?: number;
   shipping_address: ShippingAddress;
 };
 
+export type PlacedOrder = {
+  order_id: string;
+  order_number: string;
+  total: number;
+  payment_method: string;
+  payment_status: string;
+};
+
+/**
+ * Places an order through the atomic `place_order` RPC. The database re-reads
+ * the cart, re-prices every line, re-checks stock, recomputes tax/delivery and
+ * revalidates the coupon — the browser only supplies intent.
+ */
 export function usePlaceOrder() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: PlaceOrderInput) => {
+    mutationFn: async (input: PlaceOrderInput): Promise<PlacedOrder> => {
       if (!user) throw new Error("Please sign in to place an order.");
-      const { data: order, error } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          subtotal: input.subtotal,
-          discount: input.discount,
-          delivery_fee: input.delivery_fee,
-          total: input.total,
-          coupon_code: input.coupon_code,
-          payment_method: input.payment_method,
-          payment_status: input.payment_method === "cod" ? "pending" : "paid",
-          delivery_option: input.delivery_option,
-          shipping_address: input.shipping_address as unknown as Record<string, string>,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc("place_order", {
+        _address: input.shipping_address as unknown as Record<string, string>,
+        ...(input.coupon_code ? { _coupon: input.coupon_code } : {}),
+        _delivery_option: input.delivery_option,
+        _payment_method: input.payment_method,
+        _use_wallet: input.use_wallet ?? 0,
+      });
       if (error) throw error;
-
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(input.items.map((item) => ({ ...item, order_id: order.id })));
-      if (itemsError) throw itemsError;
-
-      await supabase.from("cart_items").delete().eq("user_id", user.id);
-      return order;
+      return data as unknown as PlacedOrder;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["orders"] });
-      qc.invalidateQueries({ queryKey: ["cart"] });
+      void qc.invalidateQueries({ queryKey: ["orders"] });
+      void qc.invalidateQueries({ queryKey: ["cart"] });
+      void qc.invalidateQueries({ queryKey: ["wallet"] });
+      void qc.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e) => notifyError(e, "We couldn't place your order."),
+  });
+}
+
+/**
+ * Cancels an order via RPC so stock is restored and any paid amount is
+ * credited back to the wallet inside a single transaction.
+ */
+export function useCancelOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const { data, error } = await supabase.rpc("cancel_order", {
+        _order_id: id,
+        ...(reason ? { _reason: reason } : {}),
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["orders"] });
+      void qc.invalidateQueries({ queryKey: ["order"] });
+      void qc.invalidateQueries({ queryKey: ["wallet"] });
+      toast.success("Order cancelled — any amount paid is back in your wallet");
+    },
+    onError: (e) => notifyError(e, "We couldn't cancel that order."),
   });
 }
 
 export function useUpdateOrderStatus() {
   const qc = useQueryClient();
+  const cancelOrder = useCancelOrder();
   return useMutation({
     mutationFn: async ({
       id,
@@ -212,25 +226,26 @@ export function useUpdateOrderStatus() {
       cancel_reason?: string;
       return_reason?: string;
     }) => {
-      const patch: {
-        status: "cancelled" | "returned";
-        cancel_reason?: string;
-        return_reason?: string;
-        return_requested_at?: string;
-      } = { status };
-      if (cancel_reason) patch.cancel_reason = cancel_reason;
-      if (return_reason) {
-        patch.return_reason = return_reason;
-        patch.return_requested_at = new Date().toISOString();
+      if (status === "cancelled") {
+        await cancelOrder.mutateAsync({ id, ...(cancel_reason ? { reason: cancel_reason } : {}) });
+        return;
       }
-      const { error } = await supabase.from("orders").update(patch).eq("id", id);
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          status: "returned",
+          return_reason: return_reason ?? null,
+          return_requested_at: new Date().toISOString(),
+        })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: ["orders"] });
-      qc.invalidateQueries({ queryKey: ["order"] });
-      toast.success(vars.status === "cancelled" ? "Order cancelled" : "Return requested");
+      void qc.invalidateQueries({ queryKey: ["orders"] });
+      void qc.invalidateQueries({ queryKey: ["order"] });
+      if (vars.status === "returned") toast.success("Return requested");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e) => notifyError(e),
   });
 }
+
