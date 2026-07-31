@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Section } from "@/components/commerce/section";
 import { ProductCard } from "@/components/commerce/product-card";
+import type { Product } from "@/types/catalog";
 import { getProduct, products, productsByCategory } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/product/$slug")({
@@ -61,7 +62,7 @@ function ProductPage() {
 
           <div>
             <div className="flex flex-wrap gap-2">
-              {product.badges.map((b) => (
+              {product.badges.map((b: string) => (
                 <Badge key={b} className="rounded-full bg-leaf text-leaf-foreground">
                   {b}
                 </Badge>
@@ -161,7 +162,7 @@ function ProductPage() {
       <Section>
         <h2 className="mb-6 text-xl sm:text-2xl">You may also like</h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {related.map((p) => (
+          {related.map((p: Product) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>

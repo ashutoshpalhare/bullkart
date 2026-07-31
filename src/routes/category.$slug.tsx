@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Section } from "@/components/commerce/section";
 import { ProductCard } from "@/components/commerce/product-card";
+import type { Product } from "@/types/catalog";
 import { getCategory, productsByCategory } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/category/$slug")({
@@ -46,7 +47,7 @@ function CategoryPage() {
 
       {products.length ? (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((p) => (
+          {products.map((p: Product) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
