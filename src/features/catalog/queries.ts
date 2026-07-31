@@ -8,20 +8,20 @@ export const PRODUCT_SELECT =
 export const PAGE_SIZE = 12;
 
 export type ProductFilters = {
-  categorySlug?: string;
-  categorySlugs?: string[];
-  search?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  minRating?: number;
-  inStockOnly?: boolean;
-  organicOnly?: boolean;
-  sellerSlugs?: string[];
-  sort?: SortKey;
-  featured?: boolean;
-  bestSeller?: boolean;
-  newArrival?: boolean;
-  limit?: number;
+  categorySlug?: string | undefined;
+  categorySlugs?: string[] | undefined;
+  search?: string | undefined;
+  minPrice?: number | undefined;
+  maxPrice?: number | undefined;
+  minRating?: number | undefined;
+  inStockOnly?: boolean | undefined;
+  organicOnly?: boolean | undefined;
+  sellerSlugs?: string[] | undefined;
+  sort?: SortKey | undefined;
+  featured?: boolean | undefined;
+  bestSeller?: boolean | undefined;
+  newArrival?: boolean | undefined;
+  limit?: number | undefined;
 };
 
 function applySort<T>(q: T, sort: SortKey | undefined): T {
