@@ -33,6 +33,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as VendorIndexRouteImport } from './routes/vendor.index'
+import { Route as VendorProductsRouteImport } from './routes/vendor.products'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -155,6 +156,11 @@ const VendorIndexRoute = VendorIndexRouteImport.update({
   path: '/',
   getParentRoute: () => VendorRoute,
 } as any)
+const VendorProductsRoute = VendorProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => VendorRoute,
+} as any)
 const ApiPublicRazorpayWebhookRoute =
   ApiPublicRazorpayWebhookRouteImport.update({
     id: '/api/public/razorpay/webhook',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/vendor/products': typeof VendorProductsRoute
   '/admin/': typeof AdminIndexRoute
   '/vendor/': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/vendor/products': typeof VendorProductsRoute
   '/admin': typeof AdminIndexRoute
   '/vendor': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/vendor/products': typeof VendorProductsRoute
   '/admin/': typeof AdminIndexRoute
   '/vendor/': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/category/$slug'
     | '/product/$slug'
+    | '/vendor/products'
     | '/admin/'
     | '/vendor/'
     | '/api/public/razorpay/webhook'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/category/$slug'
     | '/product/$slug'
+    | '/vendor/products'
     | '/admin'
     | '/vendor'
     | '/api/public/razorpay/webhook'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/category/$slug'
     | '/product/$slug'
+    | '/vendor/products'
     | '/admin/'
     | '/vendor/'
     | '/api/public/razorpay/webhook'
@@ -514,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendorIndexRouteImport
       parentRoute: typeof VendorRoute
     }
+    '/vendor/products': {
+      id: '/vendor/products'
+      path: '/products'
+      fullPath: '/vendor/products'
+      preLoaderRoute: typeof VendorProductsRouteImport
+      parentRoute: typeof VendorRoute
+    }
     '/api/public/razorpay/webhook': {
       id: '/api/public/razorpay/webhook'
       path: '/api/public/razorpay/webhook'
@@ -547,10 +566,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface VendorRouteChildren {
+  VendorProductsRoute: typeof VendorProductsRoute
   VendorIndexRoute: typeof VendorIndexRoute
 }
 
 const VendorRouteChildren: VendorRouteChildren = {
+  VendorProductsRoute: VendorProductsRoute,
   VendorIndexRoute: VendorIndexRoute,
 }
 
