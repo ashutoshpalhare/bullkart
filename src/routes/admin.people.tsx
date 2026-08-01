@@ -27,6 +27,8 @@ import {
   type AdminUser,
   type SellerRow,
 } from "@/features/admin/hooks";
+import { useSaveSellerFinance } from "@/features/seller/finance";
+import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/format";
 import type { Enums } from "@/integrations/supabase/types";
 
@@ -232,11 +234,12 @@ const EMPTY_SELLER: SellerForm = {
 function SellersPanel({ type }: { type: "vendor" | "farmer" }) {
   const sellers = useSellers(type);
   const crud = useSellerCrud();
+  const saveFinance = useSaveSellerFinance();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<SellerRow | null>(null);
   const [form, setForm] = useState<SellerForm>(EMPTY_SELLER);
 
-  const openEdit = (row: SellerRow | null) => {
+  const openEdit = async (row: SellerRow | null) => {
     setEditing(row);
     setForm(
       row
@@ -249,12 +252,25 @@ function SellersPanel({ type }: { type: "vendor" | "farmer" }) {
             years_active: row.years_active ? String(row.years_active) : "",
             verified: row.verified,
             is_active: row.is_active,
-            gst_number: row.gst_number ?? "",
-            payout_account: row.payout_account ?? "",
+            gst_number: "",
+            payout_account: "",
           }
         : EMPTY_SELLER,
     );
     setOpen(true);
+    if (row) {
+      // GST / payout are stored privately in seller_finance (admin-readable).
+      const { data } = await supabase
+        .from("seller_finance")
+        .select("gst_number, payout_account")
+        .eq("seller_id", row.id)
+        .maybeSingle();
+      setForm((f) => ({
+        ...f,
+        gst_number: data?.gst_number ?? "",
+        payout_account: data?.payout_account ?? "",
+      }));
+    }
   };
 
   const submit = async () => {
@@ -274,11 +290,17 @@ function SellersPanel({ type }: { type: "vendor" | "farmer" }) {
       years_active: form.years_active ? Number(form.years_active) : null,
       verified: form.verified,
       is_active: form.is_active,
-      gst_number: form.gst_number.trim() || null,
-      payout_account: form.payout_account.trim() || null,
     };
-    if (editing) await crud.update.mutateAsync({ id: editing.id, values });
-    else await crud.create.mutateAsync(values);
+    if (editing) {
+      await crud.update.mutateAsync({ id: editing.id, values });
+      await saveFinance.mutateAsync({
+        seller_id: editing.id,
+        gst_number: form.gst_number,
+        payout_account: form.payout_account,
+      });
+    } else {
+      await crud.create.mutateAsync(values);
+    }
     setOpen(false);
   };
 
@@ -311,7 +333,6 @@ function SellersPanel({ type }: { type: "vendor" | "farmer" }) {
         </Badge>
       ),
     },
-    { key: "gst", header: "GST", hideOnMobile: true, value: (s) => s.gst_number ?? "—" },
     {
       key: "status",
       header: "Status",

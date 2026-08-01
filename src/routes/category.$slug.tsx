@@ -1,3 +1,4 @@
+import { breadcrumbLd, canonical, prettySlug } from "@/lib/seo";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Section } from "@/components/commerce/section";
@@ -15,10 +16,7 @@ import {
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
-    const pretty = params.slug
-      .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
+    const pretty = prettySlug(params.slug);
     return {
       meta: [
         { title: `${pretty} — Organic ${pretty} Online | BullKart` },
@@ -33,6 +31,14 @@ export const Route = createFileRoute("/category/$slug")({
         },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [canonical(`/category/${params.slug}`)],
+      scripts: [
+        breadcrumbLd([
+          { name: "Home", item: "/" },
+          { name: "Categories", item: "/categories" },
+          { name: pretty, item: `/category/${params.slug}` },
+        ]),
       ],
     };
   },

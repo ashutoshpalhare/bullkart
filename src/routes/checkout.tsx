@@ -33,6 +33,7 @@ export const Route = createFileRoute("/checkout")({
       { property: "og:description", content: "Place your organic order on BullKart." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: CheckoutPage,

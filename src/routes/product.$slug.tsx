@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { breadcrumbLd, canonical, prettySlug } from "@/lib/seo";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -49,10 +50,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => {
-    const pretty = params.slug
-      .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
+    const pretty = prettySlug(params.slug);
     return {
       meta: [
         { title: `${pretty} — Buy Organic Online | BullKart` },
@@ -64,6 +62,14 @@ export const Route = createFileRoute("/product/$slug")({
         { property: "og:description", content: `Certified organic ${pretty}, delivered fresh.` },
         { property: "og:type", content: "product" },
         { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [canonical(`/product/${params.slug}`)],
+      scripts: [
+        breadcrumbLd([
+          { name: "Home", item: "/" },
+          { name: "Shop", item: "/categories" },
+          { name: pretty, item: `/product/${params.slug}` },
+        ]),
       ],
     };
   },

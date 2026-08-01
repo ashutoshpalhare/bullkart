@@ -1250,20 +1250,50 @@ export type Database = {
           },
         ]
       }
+      seller_finance: {
+        Row: {
+          created_at: string
+          gst_number: string | null
+          payout_account: string | null
+          seller_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gst_number?: string | null
+          payout_account?: string | null
+          seller_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gst_number?: string | null
+          payout_account?: string | null
+          seller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_finance_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: true
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sellers: {
         Row: {
           cover_url: string | null
           created_at: string
           deleted_at: string | null
           emoji: string | null
-          gst_number: string | null
           id: string
           is_active: boolean
           location: string | null
           logo_url: string | null
           name: string
           owner_id: string | null
-          payout_account: string | null
           slug: string
           story: string | null
           type: Database["public"]["Enums"]["seller_type"]
@@ -1276,14 +1306,12 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           emoji?: string | null
-          gst_number?: string | null
           id?: string
           is_active?: boolean
           location?: string | null
           logo_url?: string | null
           name: string
           owner_id?: string | null
-          payout_account?: string | null
           slug: string
           story?: string | null
           type?: Database["public"]["Enums"]["seller_type"]
@@ -1296,14 +1324,12 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           emoji?: string | null
-          gst_number?: string | null
           id?: string
           is_active?: boolean
           location?: string | null
           logo_url?: string | null
           name?: string
           owner_id?: string | null
-          payout_account?: string | null
           slug?: string
           story?: string | null
           type?: Database["public"]["Enums"]["seller_type"]

@@ -31,6 +31,7 @@ export const Route = createFileRoute("/profile")({
       { property: "og:description", content: "Manage your BullKart account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: ProfilePage,

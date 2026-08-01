@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BadgeCheck, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/dashboard/form-field";
 import { SectionCard } from "@/components/dashboard/dashboard-layout";
 import { useStoreCrud } from "@/features/seller/hooks";
+import { useSaveSellerFinance, useSellerFinance } from "@/features/seller/finance";
 import type { SellerRow } from "@/features/roles/hooks";
 
 /** Editable brand / farm profile shared by the vendor and farmer workspaces. */
 export function StoreProfile({ store, kind }: { store: SellerRow; kind: "vendor" | "farmer" }) {
   const crud = useStoreCrud();
+  // GST / payout live in the private seller_finance table, not the public seller row.
+  const finance = useSellerFinance(store.id);
+  const saveFinance = useSaveSellerFinance();
   const [form, setForm] = useState({
     name: store.name,
     location: store.location ?? "",
@@ -22,10 +26,19 @@ export function StoreProfile({ store, kind }: { store: SellerRow; kind: "vendor"
     years_active: store.years_active?.toString() ?? "",
     logo_url: store.logo_url ?? "",
     cover_url: store.cover_url ?? "",
-    gst_number: store.gst_number ?? "",
-    payout_account: store.payout_account ?? "",
+    gst_number: "",
+    payout_account: "",
     is_active: store.is_active,
   });
+
+  useEffect(() => {
+    if (!finance.data) return;
+    setForm((prev) => ({
+      ...prev,
+      gst_number: finance.data?.gst_number ?? "",
+      payout_account: finance.data?.payout_account ?? "",
+    }));
+  }, [finance.data]);
 
   const set = (key: keyof typeof form, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -54,6 +67,11 @@ export function StoreProfile({ store, kind }: { store: SellerRow; kind: "vendor"
             className="grid gap-4 sm:grid-cols-2"
             onSubmit={(event) => {
               event.preventDefault();
+              saveFinance.mutate({
+                seller_id: store.id,
+                gst_number: form.gst_number,
+                payout_account: form.payout_account,
+              });
               crud.update.mutate({
                 id: store.id,
                 values: {
@@ -64,8 +82,6 @@ export function StoreProfile({ store, kind }: { store: SellerRow; kind: "vendor"
                   years_active: form.years_active ? Number(form.years_active) : null,
                   logo_url: form.logo_url.trim() || null,
                   cover_url: form.cover_url.trim() || null,
-                  gst_number: form.gst_number.trim() || null,
-                  payout_account: form.payout_account.trim() || null,
                   is_active: form.is_active,
                 },
               });
@@ -97,10 +113,10 @@ export function StoreProfile({ store, kind }: { store: SellerRow; kind: "vendor"
             <FormField label="Cover URL">
               <Input value={form.cover_url} onChange={(e) => set("cover_url", e.target.value)} />
             </FormField>
-            <FormField label="GST number" hint="Used on invoices and payout statements.">
+            <FormField label="GST number" hint="Private — visible only to you and BullKart admins.">
               <Input value={form.gst_number} onChange={(e) => set("gst_number", e.target.value)} />
             </FormField>
-            <FormField label="Payout account" hint="Bank account or UPI ID for settlements.">
+            <FormField label="Payout account" hint="Private — visible only to you and BullKart admins.">
               <Input value={form.payout_account} onChange={(e) => set("payout_account", e.target.value)} />
             </FormField>
 
@@ -115,7 +131,7 @@ export function StoreProfile({ store, kind }: { store: SellerRow; kind: "vendor"
             </div>
 
             <div className="sm:col-span-2">
-              <Button type="submit" className="rounded-full" disabled={crud.update.isPending}>
+              <Button type="submit" className="rounded-full" disabled={crud.update.isPending || saveFinance.isPending}>
                 {crud.update.isPending ? "Saving…" : "Save profile"}
               </Button>
             </div>

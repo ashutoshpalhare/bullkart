@@ -1,3 +1,4 @@
+import { canonical } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Section, SectionHeader } from "@/components/commerce/section";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/categories")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [canonical("/categories")],
   }),
   component: CategoriesPage,
 });

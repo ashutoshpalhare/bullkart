@@ -1,3 +1,4 @@
+import { canonical, organizationLd, websiteLd } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ShieldCheck, Truck, Sprout, BadgeCheck, ArrowRight } from "lucide-react";
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [canonical("/")],
+    scripts: [organizationLd, websiteLd],
   }),
   component: Home,
 });
