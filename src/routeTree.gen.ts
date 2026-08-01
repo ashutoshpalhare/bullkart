@@ -32,6 +32,7 @@ import { Route as AdminPeopleRouteImport } from './routes/admin.people'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as FarmerIndexRouteImport } from './routes/farmer.index'
+import { Route as FarmerOrdersRouteImport } from './routes/farmer.orders'
 import { Route as FarmerProduceRouteImport } from './routes/farmer.produce'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as VendorIndexRouteImport } from './routes/vendor.index'
@@ -156,6 +157,11 @@ const FarmerIndexRoute = FarmerIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FarmerRoute,
 } as any)
+const FarmerOrdersRoute = FarmerOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => FarmerRoute,
+} as any)
 const FarmerProduceRoute = FarmerProduceRouteImport.update({
   id: '/produce',
   path: '/produce',
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/farmer/orders': typeof FarmerOrdersRoute
   '/farmer/produce': typeof FarmerProduceRoute
   '/product/$slug': typeof ProductSlugRoute
   '/vendor/orders': typeof VendorOrdersRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/farmer/orders': typeof FarmerOrdersRoute
   '/farmer/produce': typeof FarmerProduceRoute
   '/product/$slug': typeof ProductSlugRoute
   '/vendor/orders': typeof VendorOrdersRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/farmer/orders': typeof FarmerOrdersRoute
   '/farmer/produce': typeof FarmerProduceRoute
   '/product/$slug': typeof ProductSlugRoute
   '/vendor/orders': typeof VendorOrdersRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/settings'
     | '/category/$slug'
+    | '/farmer/orders'
     | '/farmer/produce'
     | '/product/$slug'
     | '/vendor/orders'
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/settings'
     | '/category/$slug'
+    | '/farmer/orders'
     | '/farmer/produce'
     | '/product/$slug'
     | '/vendor/orders'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/settings'
     | '/category/$slug'
+    | '/farmer/orders'
     | '/farmer/produce'
     | '/product/$slug'
     | '/vendor/orders'
@@ -577,6 +589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FarmerIndexRouteImport
       parentRoute: typeof FarmerRoute
     }
+    '/farmer/orders': {
+      id: '/farmer/orders'
+      path: '/orders'
+      fullPath: '/farmer/orders'
+      preLoaderRoute: typeof FarmerOrdersRouteImport
+      parentRoute: typeof FarmerRoute
+    }
     '/farmer/produce': {
       id: '/farmer/produce'
       path: '/produce'
@@ -659,11 +678,13 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface FarmerRouteChildren {
+  FarmerOrdersRoute: typeof FarmerOrdersRoute
   FarmerProduceRoute: typeof FarmerProduceRoute
   FarmerIndexRoute: typeof FarmerIndexRoute
 }
 
 const FarmerRouteChildren: FarmerRouteChildren = {
+  FarmerOrdersRoute: FarmerOrdersRoute,
   FarmerProduceRoute: FarmerProduceRoute,
   FarmerIndexRoute: FarmerIndexRoute,
 }
