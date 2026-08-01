@@ -1,3 +1,4 @@
+import { canonical } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { Section, SectionHeader } from "@/components/commerce/section";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/farmers")({
       { property: "og:title", content: "Verified Organic Farmers | BullKart" },
       { property: "og:description", content: "Meet the certified farmers and collectives behind BullKart." },
     ],
+    links: [canonical("/farmers")],
   }),
   component: FarmersPage,
 });

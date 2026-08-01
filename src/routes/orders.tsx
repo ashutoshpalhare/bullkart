@@ -31,6 +31,7 @@ export const Route = createFileRoute("/orders")({
       { property: "og:description", content: "Track your organic orders on BullKart." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: OrdersPage,

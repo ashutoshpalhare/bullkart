@@ -15,6 +15,10 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { Toaster } from "@/components/ui/sonner";
+import { NetworkStatus } from "@/components/layout/network-status";
+import { InstallPrompt } from "@/components/layout/install-prompt";
+import { registerServiceWorker } from "@/lib/pwa";
+import { captureError, observeWebVitals, trackPageView } from "@/lib/monitoring";
 import { AuthProvider } from "@/hooks/use-auth";
 
 function NotFoundComponent() {
@@ -44,6 +48,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    captureError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
@@ -89,6 +94,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Buy certified organic groceries, dairy, ayurveda, clothing and eco-living essentials direct from verified Indian farmers and ethical brands.",
       },
       { name: "author", content: "BullKart" },
+      { name: "theme-color", content: "#2e7d32" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "BullKart" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -100,7 +109,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -125,11 +136,23 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    registerServiceWorker();
+    observeWebVitals();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(router.state.location.pathname);
+    return router.subscribe("onResolved", ({ toLocation }) => trackPageView(toLocation.pathname));
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-dvh flex-col">
+          <NetworkStatus />
           <Navbar />
           <main className="flex-1 pb-20 lg:pb-0">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
@@ -137,6 +160,7 @@ function RootComponent() {
           </main>
           <Footer />
           <MobileTabBar />
+          <InstallPrompt />
         </div>
         <Toaster position="top-center" richColors />
       </AuthProvider>

@@ -21,6 +21,7 @@ import { Route as FarmersRouteImport } from './routes/farmers'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as VendorRouteImport } from './routes/vendor'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -102,6 +103,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VendorRoute = VendorRouteImport.update({
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vendor': typeof VendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/admin/catalog': typeof AdminCatalogRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/wishlist': typeof WishlistRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/marketing': typeof AdminMarketingRoute
@@ -299,6 +307,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vendor': typeof VendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/admin/catalog': typeof AdminCatalogRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/profile'
     | '/search'
+    | '/sitemap.xml'
     | '/vendor'
     | '/wishlist'
     | '/admin/catalog'
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/profile'
     | '/search'
+    | '/sitemap.xml'
     | '/wishlist'
     | '/admin/catalog'
     | '/admin/marketing'
@@ -406,6 +417,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/profile'
     | '/search'
+    | '/sitemap.xml'
     | '/vendor'
     | '/wishlist'
     | '/admin/catalog'
@@ -443,6 +455,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   VendorRoute: typeof VendorRouteWithChildren
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
@@ -534,6 +547,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vendor': {
@@ -766,6 +786,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   VendorRoute: VendorRouteWithChildren,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
@@ -775,3 +796,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

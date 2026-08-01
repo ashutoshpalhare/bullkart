@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { canonical } from "@/lib/seo";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Search as SearchIcon, X } from "lucide-react";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/search")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [canonical("/search")],
   }),
   component: SearchPage,
 });
