@@ -371,8 +371,8 @@ function PartnerOnboarding() {
             create.mutate({
               full_name: form.full_name.trim(),
               phone: form.phone.trim(),
-              vehicle_type: form.vehicle_type.trim() || undefined,
-              vehicle_number: form.vehicle_number.trim() || undefined,
+              ...(form.vehicle_type.trim() ? { vehicle_type: form.vehicle_type.trim() } : {}),
+              ...(form.vehicle_number.trim() ? { vehicle_number: form.vehicle_number.trim() } : {}),
             });
           }}
         >
