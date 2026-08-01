@@ -1,39 +1,46 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { BarChart3, Package, ShoppingBag, Store, Wallet } from "lucide-react";
+import { DashboardLayout, RoleGate } from "@/components/dashboard/dashboard-layout";
+import { StoreGate } from "@/components/dashboard/store-gate";
 
 export const Route = createFileRoute("/vendor")({
   head: () => ({
     meta: [
-      { title: "Vendor Dashboard | BullKart" },
-      { name: "description", content: "Manage your BullKart storefront: products, inventory, orders, coupons, payouts and analytics." },
-      { property: "og:title", content: "Vendor Dashboard | BullKart" },
-      { property: "og:description", content: "Products, inventory, orders, coupons and payouts in one place." },
+      { title: "Vendor Workspace — BullKart" },
+      {
+        name: "description",
+        content:
+          "Run your BullKart storefront: catalogue, inventory, order fulfilment, payouts and store profile.",
+      },
+      { property: "og:title", content: "Vendor Workspace — BullKart" },
+      { property: "og:description", content: "Catalogue, inventory, orders and payouts for BullKart vendors." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "noindex" },
     ],
   }),
-  component: VendorDashboard,
+  component: VendorLayoutRoute,
 });
 
-function VendorDashboard() {
+const NAV = [
+  { to: "/vendor", label: "Overview", icon: <BarChart3 className="size-4" /> },
+  { to: "/vendor/products", label: "Products", icon: <Package className="size-4" /> },
+  { to: "/vendor/orders", label: "Orders", icon: <ShoppingBag className="size-4" /> },
+  { to: "/vendor/payouts", label: "Payouts", icon: <Wallet className="size-4" /> },
+  { to: "/vendor/profile", label: "Store profile", icon: <Store className="size-4" /> },
+];
+
+function VendorLayoutRoute() {
   return (
-    <DashboardShell
-      role="Vendor"
-      title="Vendor dashboard"
-      subtitle="Run your organic storefront — catalogue, fulfilment, promotions and settlements."
-      stats={[
-        { label: "Revenue (30d)", value: "₹4,82,300", delta: "+18% vs last month" },
-        { label: "Orders", value: "1,284", delta: "96% on-time dispatch" },
-        { label: "Live SKUs", value: "142" },
-        { label: "Next payout", value: "₹1,12,400" },
-      ]}
-      modules={[
-        { label: "Vendor profile", description: "Brand story, GST & FSSAI documents, pickup addresses." },
-        { label: "Products", description: "Create listings with variants, images, HSN codes and organic certificates." },
-        { label: "Orders", description: "Accept, pack and hand over to delivery partners with SLA tracking." },
-        { label: "Inventory", description: "Stock levels per warehouse, low-stock alerts and restock forecasts." },
-        { label: "Analytics", description: "Conversion, repeat rate, category share and return reasons." },
-        { label: "Coupons", description: "Store-level discounts, BOGO and first-order offers." },
-        { label: "Payouts", description: "Settlement cycles, commission breakdown and invoices." },
-      ]}
-    />
+    <RoleGate allow={["vendor", "admin"]}>
+      <DashboardLayout
+        role="Vendor"
+        title="Vendor workspace"
+        subtitle="Catalogue, fulfilment and settlements for your organic storefront."
+        nav={NAV}
+      >
+        <StoreGate type="vendor">{() => <Outlet />}</StoreGate>
+      </DashboardLayout>
+    </RoleGate>
   );
 }
