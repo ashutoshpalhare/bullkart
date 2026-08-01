@@ -301,6 +301,7 @@ export type Database = {
           max_discount: number | null
           min_order: number
           per_user_limit: number
+          seller_id: string | null
           updated_at: string
           usage_limit: number | null
           used_count: number
@@ -319,6 +320,7 @@ export type Database = {
           max_discount?: number | null
           min_order?: number
           per_user_limit?: number
+          seller_id?: string | null
           updated_at?: string
           usage_limit?: number | null
           used_count?: number
@@ -337,13 +339,22 @@ export type Database = {
           max_discount?: number | null
           min_order?: number
           per_user_limit?: number
+          seller_id?: string | null
           updated_at?: string
           usage_limit?: number | null
           used_count?: number
           valid_from?: string
           valid_to?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "coupons_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_assignments: {
         Row: {
@@ -433,6 +444,66 @@ export type Database = {
           vehicle_type?: string | null
         }
         Relationships: []
+      }
+      harvest_updates: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string | null
+          harvest_date: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean
+          product_id: string | null
+          seller_id: string
+          stage: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          harvest_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          product_id?: string | null
+          seller_id: string
+          stage?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          harvest_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          product_id?: string | null
+          seller_id?: string
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "harvest_updates_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "harvest_updates_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_movements: {
         Row: {
@@ -600,6 +671,7 @@ export type Database = {
           delivered_at: string | null
           delivery_fee: number
           delivery_option: string
+          delivery_otp: string | null
           delivery_partner_id: string | null
           discount: number
           id: string
@@ -626,6 +698,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_fee?: number
           delivery_option?: string
+          delivery_otp?: string | null
           delivery_partner_id?: string | null
           discount?: number
           id?: string
@@ -652,6 +725,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_fee?: number
           delivery_option?: string
+          delivery_otp?: string | null
           delivery_partner_id?: string | null
           discount?: number
           id?: string
@@ -737,6 +811,56 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          amount: number
+          commission: number
+          created_at: string
+          id: string
+          note: string | null
+          period_end: string | null
+          period_start: string | null
+          reference: string | null
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          commission?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          commission?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
             referencedColumns: ["id"]
           },
         ]
@@ -950,7 +1074,9 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_suspended: boolean
           phone: string | null
+          suspended_reason: string | null
           updated_at: string
         }
         Insert: {
@@ -959,7 +1085,9 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          is_suspended?: boolean
           phone?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Update: {
@@ -968,7 +1096,9 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_suspended?: boolean
           phone?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1347,6 +1477,21 @@ export type Database = {
         Args: { _change: number; _note?: string; _product_id: string }
         Returns: number
       }
+      admin_metrics: { Args: never; Returns: Json }
+      assign_delivery_partner: {
+        Args: { _order_id: string; _partner_user_id: string }
+        Returns: Json
+      }
+      broadcast_notification: {
+        Args: {
+          _audience?: string
+          _body?: string
+          _link?: string
+          _title: string
+          _type?: Database["public"]["Enums"]["notification_type"]
+        }
+        Returns: number
+      }
       cancel_order: {
         Args: { _order_id: string; _reason?: string }
         Returns: Json
@@ -1411,8 +1556,20 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      set_order_status: {
+        Args: {
+          _note?: string
+          _order_id: string
+          _status: Database["public"]["Enums"]["order_status"]
+        }
+        Returns: Json
+      }
       validate_coupon: {
         Args: { _code: string; _subtotal: number }
+        Returns: Json
+      }
+      verify_delivery_otp: {
+        Args: { _order_id: string; _otp: string }
         Returns: Json
       }
     }
