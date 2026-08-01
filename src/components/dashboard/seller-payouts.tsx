@@ -67,7 +67,7 @@ export function SellerPayouts({ sellerId }: { sellerId: string }) {
       sortable: true,
       value: (p) => p.status,
       cell: (p) => (
-        <Badge className={`rounded-full capitalize ${TONE[p.status] ?? TONE.pending}`}>{p.status}</Badge>
+        <Badge className={`rounded-full capitalize ${TONE[p.status] ?? TONE['pending']}`}>{p.status}</Badge>
       ),
     },
   ];
