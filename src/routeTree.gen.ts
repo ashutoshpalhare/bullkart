@@ -31,6 +31,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPeopleRouteImport } from './routes/admin.people'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as FarmerIndexRouteImport } from './routes/farmer.index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as VendorIndexRouteImport } from './routes/vendor.index'
 import { Route as VendorOrdersRouteImport } from './routes/vendor.orders'
@@ -149,6 +150,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FarmerIndexRoute = FarmerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FarmerRoute,
+} as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
   id: '/product/$slug',
   path: '/product/$slug',
@@ -194,7 +200,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
-  '/farmer': typeof FarmerRoute
+  '/farmer': typeof FarmerRouteWithChildren
   '/farmers': typeof FarmersRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/vendor/products': typeof VendorProductsRoute
   '/vendor/profile': typeof VendorProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/farmer/': typeof FarmerIndexRoute
   '/vendor/': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
@@ -224,7 +231,6 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
-  '/farmer': typeof FarmerRoute
   '/farmers': typeof FarmersRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
@@ -243,6 +249,7 @@ export interface FileRoutesByTo {
   '/vendor/products': typeof VendorProductsRoute
   '/vendor/profile': typeof VendorProfileRoute
   '/admin': typeof AdminIndexRoute
+  '/farmer': typeof FarmerIndexRoute
   '/vendor': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
@@ -255,7 +262,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
-  '/farmer': typeof FarmerRoute
+  '/farmer': typeof FarmerRouteWithChildren
   '/farmers': typeof FarmersRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
@@ -275,6 +282,7 @@ export interface FileRoutesById {
   '/vendor/products': typeof VendorProductsRoute
   '/vendor/profile': typeof VendorProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/farmer/': typeof FarmerIndexRoute
   '/vendor/': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
@@ -308,6 +316,7 @@ export interface FileRouteTypes {
     | '/vendor/products'
     | '/vendor/profile'
     | '/admin/'
+    | '/farmer/'
     | '/vendor/'
     | '/api/public/razorpay/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -318,7 +327,6 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/delivery'
-    | '/farmer'
     | '/farmers'
     | '/orders'
     | '/profile'
@@ -337,6 +345,7 @@ export interface FileRouteTypes {
     | '/vendor/products'
     | '/vendor/profile'
     | '/admin'
+    | '/farmer'
     | '/vendor'
     | '/api/public/razorpay/webhook'
   id:
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/vendor/products'
     | '/vendor/profile'
     | '/admin/'
+    | '/farmer/'
     | '/vendor/'
     | '/api/public/razorpay/webhook'
   fileRoutesById: FileRoutesById
@@ -380,7 +390,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   DeliveryRoute: typeof DeliveryRoute
-  FarmerRoute: typeof FarmerRoute
+  FarmerRoute: typeof FarmerRouteWithChildren
   FarmersRoute: typeof FarmersRoute
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
@@ -548,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/farmer/': {
+      id: '/farmer/'
+      path: '/'
+      fullPath: '/farmer/'
+      preLoaderRoute: typeof FarmerIndexRouteImport
+      parentRoute: typeof FarmerRoute
+    }
     '/product/$slug': {
       id: '/product/$slug'
       path: '/product/$slug'
@@ -622,6 +639,17 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface FarmerRouteChildren {
+  FarmerIndexRoute: typeof FarmerIndexRoute
+}
+
+const FarmerRouteChildren: FarmerRouteChildren = {
+  FarmerIndexRoute: FarmerIndexRoute,
+}
+
+const FarmerRouteWithChildren =
+  FarmerRoute._addFileChildren(FarmerRouteChildren)
+
 interface VendorRouteChildren {
   VendorOrdersRoute: typeof VendorOrdersRoute
   VendorPayoutsRoute: typeof VendorPayoutsRoute
@@ -649,7 +677,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   DeliveryRoute: DeliveryRoute,
-  FarmerRoute: FarmerRoute,
+  FarmerRoute: FarmerRouteWithChildren,
   FarmersRoute: FarmersRoute,
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
