@@ -31,7 +31,17 @@ import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPeopleRouteImport } from './routes/admin.people'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as FarmerIndexRouteImport } from './routes/farmer.index'
+import { Route as FarmerHarvestsRouteImport } from './routes/farmer.harvests'
+import { Route as FarmerOrdersRouteImport } from './routes/farmer.orders'
+import { Route as FarmerProduceRouteImport } from './routes/farmer.produce'
+import { Route as FarmerProfileRouteImport } from './routes/farmer.profile'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as VendorIndexRouteImport } from './routes/vendor.index'
+import { Route as VendorOrdersRouteImport } from './routes/vendor.orders'
+import { Route as VendorPayoutsRouteImport } from './routes/vendor.payouts'
+import { Route as VendorProductsRouteImport } from './routes/vendor.products'
+import { Route as VendorProfileRouteImport } from './routes/vendor.profile'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -144,10 +154,60 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FarmerIndexRoute = FarmerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FarmerRoute,
+} as any)
+const FarmerHarvestsRoute = FarmerHarvestsRouteImport.update({
+  id: '/harvests',
+  path: '/harvests',
+  getParentRoute: () => FarmerRoute,
+} as any)
+const FarmerOrdersRoute = FarmerOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => FarmerRoute,
+} as any)
+const FarmerProduceRoute = FarmerProduceRouteImport.update({
+  id: '/produce',
+  path: '/produce',
+  getParentRoute: () => FarmerRoute,
+} as any)
+const FarmerProfileRoute = FarmerProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => FarmerRoute,
+} as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
   id: '/product/$slug',
   path: '/product/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const VendorIndexRoute = VendorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => VendorRoute,
+} as any)
+const VendorOrdersRoute = VendorOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => VendorRoute,
+} as any)
+const VendorPayoutsRoute = VendorPayoutsRouteImport.update({
+  id: '/payouts',
+  path: '/payouts',
+  getParentRoute: () => VendorRoute,
+} as any)
+const VendorProductsRoute = VendorProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => VendorRoute,
+} as any)
+const VendorProfileRoute = VendorProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => VendorRoute,
 } as any)
 const ApiPublicRazorpayWebhookRoute =
   ApiPublicRazorpayWebhookRouteImport.update({
@@ -164,12 +224,12 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
-  '/farmer': typeof FarmerRoute
+  '/farmer': typeof FarmerRouteWithChildren
   '/farmers': typeof FarmersRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
-  '/vendor': typeof VendorRoute
+  '/vendor': typeof VendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/marketing': typeof AdminMarketingRoute
@@ -178,8 +238,18 @@ export interface FileRoutesByFullPath {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/farmer/harvests': typeof FarmerHarvestsRoute
+  '/farmer/orders': typeof FarmerOrdersRoute
+  '/farmer/produce': typeof FarmerProduceRoute
+  '/farmer/profile': typeof FarmerProfileRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/vendor/orders': typeof VendorOrdersRoute
+  '/vendor/payouts': typeof VendorPayoutsRoute
+  '/vendor/products': typeof VendorProductsRoute
+  '/vendor/profile': typeof VendorProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/farmer/': typeof FarmerIndexRoute
+  '/vendor/': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -189,12 +259,10 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
-  '/farmer': typeof FarmerRoute
   '/farmers': typeof FarmersRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
-  '/vendor': typeof VendorRoute
   '/wishlist': typeof WishlistRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/marketing': typeof AdminMarketingRoute
@@ -203,8 +271,18 @@ export interface FileRoutesByTo {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/farmer/harvests': typeof FarmerHarvestsRoute
+  '/farmer/orders': typeof FarmerOrdersRoute
+  '/farmer/produce': typeof FarmerProduceRoute
+  '/farmer/profile': typeof FarmerProfileRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/vendor/orders': typeof VendorOrdersRoute
+  '/vendor/payouts': typeof VendorPayoutsRoute
+  '/vendor/products': typeof VendorProductsRoute
+  '/vendor/profile': typeof VendorProfileRoute
   '/admin': typeof AdminIndexRoute
+  '/farmer': typeof FarmerIndexRoute
+  '/vendor': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesById {
@@ -216,12 +294,12 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
-  '/farmer': typeof FarmerRoute
+  '/farmer': typeof FarmerRouteWithChildren
   '/farmers': typeof FarmersRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
-  '/vendor': typeof VendorRoute
+  '/vendor': typeof VendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/marketing': typeof AdminMarketingRoute
@@ -230,8 +308,18 @@ export interface FileRoutesById {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/farmer/harvests': typeof FarmerHarvestsRoute
+  '/farmer/orders': typeof FarmerOrdersRoute
+  '/farmer/produce': typeof FarmerProduceRoute
+  '/farmer/profile': typeof FarmerProfileRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/vendor/orders': typeof VendorOrdersRoute
+  '/vendor/payouts': typeof VendorPayoutsRoute
+  '/vendor/products': typeof VendorProductsRoute
+  '/vendor/profile': typeof VendorProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/farmer/': typeof FarmerIndexRoute
+  '/vendor/': typeof VendorIndexRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRouteTypes {
@@ -258,8 +346,18 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/settings'
     | '/category/$slug'
+    | '/farmer/harvests'
+    | '/farmer/orders'
+    | '/farmer/produce'
+    | '/farmer/profile'
     | '/product/$slug'
+    | '/vendor/orders'
+    | '/vendor/payouts'
+    | '/vendor/products'
+    | '/vendor/profile'
     | '/admin/'
+    | '/farmer/'
+    | '/vendor/'
     | '/api/public/razorpay/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -269,12 +367,10 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/delivery'
-    | '/farmer'
     | '/farmers'
     | '/orders'
     | '/profile'
     | '/search'
-    | '/vendor'
     | '/wishlist'
     | '/admin/catalog'
     | '/admin/marketing'
@@ -283,8 +379,18 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/settings'
     | '/category/$slug'
+    | '/farmer/harvests'
+    | '/farmer/orders'
+    | '/farmer/produce'
+    | '/farmer/profile'
     | '/product/$slug'
+    | '/vendor/orders'
+    | '/vendor/payouts'
+    | '/vendor/products'
+    | '/vendor/profile'
     | '/admin'
+    | '/farmer'
+    | '/vendor'
     | '/api/public/razorpay/webhook'
   id:
     | '__root__'
@@ -309,8 +415,18 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/settings'
     | '/category/$slug'
+    | '/farmer/harvests'
+    | '/farmer/orders'
+    | '/farmer/produce'
+    | '/farmer/profile'
     | '/product/$slug'
+    | '/vendor/orders'
+    | '/vendor/payouts'
+    | '/vendor/products'
+    | '/vendor/profile'
     | '/admin/'
+    | '/farmer/'
+    | '/vendor/'
     | '/api/public/razorpay/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -322,12 +438,12 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   DeliveryRoute: typeof DeliveryRoute
-  FarmerRoute: typeof FarmerRoute
+  FarmerRoute: typeof FarmerRouteWithChildren
   FarmersRoute: typeof FarmersRoute
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
-  VendorRoute: typeof VendorRoute
+  VendorRoute: typeof VendorRouteWithChildren
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ProductSlugRoute: typeof ProductSlugRoute
@@ -490,12 +606,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/farmer/': {
+      id: '/farmer/'
+      path: '/'
+      fullPath: '/farmer/'
+      preLoaderRoute: typeof FarmerIndexRouteImport
+      parentRoute: typeof FarmerRoute
+    }
+    '/farmer/harvests': {
+      id: '/farmer/harvests'
+      path: '/harvests'
+      fullPath: '/farmer/harvests'
+      preLoaderRoute: typeof FarmerHarvestsRouteImport
+      parentRoute: typeof FarmerRoute
+    }
+    '/farmer/orders': {
+      id: '/farmer/orders'
+      path: '/orders'
+      fullPath: '/farmer/orders'
+      preLoaderRoute: typeof FarmerOrdersRouteImport
+      parentRoute: typeof FarmerRoute
+    }
+    '/farmer/produce': {
+      id: '/farmer/produce'
+      path: '/produce'
+      fullPath: '/farmer/produce'
+      preLoaderRoute: typeof FarmerProduceRouteImport
+      parentRoute: typeof FarmerRoute
+    }
+    '/farmer/profile': {
+      id: '/farmer/profile'
+      path: '/profile'
+      fullPath: '/farmer/profile'
+      preLoaderRoute: typeof FarmerProfileRouteImport
+      parentRoute: typeof FarmerRoute
+    }
     '/product/$slug': {
       id: '/product/$slug'
       path: '/product/$slug'
       fullPath: '/product/$slug'
       preLoaderRoute: typeof ProductSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/vendor/': {
+      id: '/vendor/'
+      path: '/'
+      fullPath: '/vendor/'
+      preLoaderRoute: typeof VendorIndexRouteImport
+      parentRoute: typeof VendorRoute
+    }
+    '/vendor/orders': {
+      id: '/vendor/orders'
+      path: '/orders'
+      fullPath: '/vendor/orders'
+      preLoaderRoute: typeof VendorOrdersRouteImport
+      parentRoute: typeof VendorRoute
+    }
+    '/vendor/payouts': {
+      id: '/vendor/payouts'
+      path: '/payouts'
+      fullPath: '/vendor/payouts'
+      preLoaderRoute: typeof VendorPayoutsRouteImport
+      parentRoute: typeof VendorRoute
+    }
+    '/vendor/products': {
+      id: '/vendor/products'
+      path: '/products'
+      fullPath: '/vendor/products'
+      preLoaderRoute: typeof VendorProductsRouteImport
+      parentRoute: typeof VendorRoute
+    }
+    '/vendor/profile': {
+      id: '/vendor/profile'
+      path: '/profile'
+      fullPath: '/vendor/profile'
+      preLoaderRoute: typeof VendorProfileRouteImport
+      parentRoute: typeof VendorRoute
     }
     '/api/public/razorpay/webhook': {
       id: '/api/public/razorpay/webhook'
@@ -529,6 +715,44 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface FarmerRouteChildren {
+  FarmerHarvestsRoute: typeof FarmerHarvestsRoute
+  FarmerOrdersRoute: typeof FarmerOrdersRoute
+  FarmerProduceRoute: typeof FarmerProduceRoute
+  FarmerProfileRoute: typeof FarmerProfileRoute
+  FarmerIndexRoute: typeof FarmerIndexRoute
+}
+
+const FarmerRouteChildren: FarmerRouteChildren = {
+  FarmerHarvestsRoute: FarmerHarvestsRoute,
+  FarmerOrdersRoute: FarmerOrdersRoute,
+  FarmerProduceRoute: FarmerProduceRoute,
+  FarmerProfileRoute: FarmerProfileRoute,
+  FarmerIndexRoute: FarmerIndexRoute,
+}
+
+const FarmerRouteWithChildren =
+  FarmerRoute._addFileChildren(FarmerRouteChildren)
+
+interface VendorRouteChildren {
+  VendorOrdersRoute: typeof VendorOrdersRoute
+  VendorPayoutsRoute: typeof VendorPayoutsRoute
+  VendorProductsRoute: typeof VendorProductsRoute
+  VendorProfileRoute: typeof VendorProfileRoute
+  VendorIndexRoute: typeof VendorIndexRoute
+}
+
+const VendorRouteChildren: VendorRouteChildren = {
+  VendorOrdersRoute: VendorOrdersRoute,
+  VendorPayoutsRoute: VendorPayoutsRoute,
+  VendorProductsRoute: VendorProductsRoute,
+  VendorProfileRoute: VendorProfileRoute,
+  VendorIndexRoute: VendorIndexRoute,
+}
+
+const VendorRouteWithChildren =
+  VendorRoute._addFileChildren(VendorRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -537,12 +761,12 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   DeliveryRoute: DeliveryRoute,
-  FarmerRoute: FarmerRoute,
+  FarmerRoute: FarmerRouteWithChildren,
   FarmersRoute: FarmersRoute,
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
-  VendorRoute: VendorRoute,
+  VendorRoute: VendorRouteWithChildren,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
   ProductSlugRoute: ProductSlugRoute,
