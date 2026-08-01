@@ -4,6 +4,7 @@ import { Ban, CheckCircle2, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import { SectionCard } from "@/components/dashboard/dashboard-layout";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
+import { FormField } from "@/components/dashboard/form-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -437,24 +437,3 @@ function SellersPanel({ type }: { type: "vendor" | "farmer" }) {
     </SectionCard>
   );
 }
-
-export function FormField({
-  label,
-  children,
-  className,
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <Label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </Label>
-      {children}
-    </div>
-  );
-}
-
-export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };
